@@ -84,8 +84,6 @@ func StartServer(opt Options) error {
 			return
 		}
 		dialer := &net.Dialer{
-			// Timeout:   120 * time.Second,
-			// KeepAlive: 120 * time.Second,
 			DualStack: true,
 		}
 		http.DefaultTransport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
