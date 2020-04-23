@@ -1,9 +1,11 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net"
@@ -11,6 +13,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"path"
+	"strconv"
 	"time"
 )
 
@@ -25,10 +28,10 @@ type Options struct {
 }
 
 type MockDefinition struct {
-	Url         string      `json:"url"`
-	Response    interface{} `json:"response"`
-	ContentType string      `json:"content_type"`
-	Method      string      `json:"method"`
+	Url         string                 `json:"url"`
+	Response    map[string]interface{} `json:"response"`
+	ContentType string                 `json:"content_type"`
+	Method      string                 `json:"method"`
 }
 
 func StartServer(opt Options) error {
@@ -59,26 +62,68 @@ func StartServer(opt Options) error {
 					continue
 				}
 				if matchRequestWithMock(mock, req) {
+					body := make(map[string]interface{})
+					// query := req.URL.Query()
+					// headers := req.Header
+					type reqValuesModel struct {
+						Body map[string]interface{}
+					}
+
+					bodyBytes, err := ioutil.ReadAll(req.Body)
+					if err != nil {
+						if opt.Debug {
+							log.Print(err)
+						}
+						continue
+					}
+					err = json.Unmarshal(bodyBytes, &body)
+					if err != nil {
+						if opt.Debug {
+							log.Print(err)
+						}
+					}
+					reqValues := reqValuesModel{
+						Body: body,
+					}
+
 					if len(mock.ContentType) > 0 {
 						w.Header().Set("Content-Type", mock.ContentType)
 					}
-					if _, ok := mock.Response.(map[string]interface{}); ok {
-						if len(mock.ContentType) == 0 {
-							w.Header().Set("Content-Type", applicationJson)
+
+					for key, value := range mock.Response {
+						if key == "default" {
+							continue
 						}
-						responseBytes, err := json.Marshal(mock.Response)
+						t := template.Must(template.New("letter").Parse(key))
+						var keyVal bytes.Buffer
+						err = t.Execute(&keyVal, reqValues)
 						if err != nil {
 							if opt.Debug {
 								log.Print(err)
 							}
 							continue
 						}
-						w.Write(responseBytes)
-						return
-					} else {
-						fmt.Fprintf(w, "%s", mock.Response)
-						return
+						if b, _ := strconv.ParseBool(keyVal.String()); b {
+							if _, ok := value.(map[string]interface{}); ok {
+								if len(mock.ContentType) == 0 {
+									w.Header().Set("Content-Type", applicationJson)
+								}
+								responseBytes, err := json.Marshal(value)
+								if err != nil {
+									if opt.Debug {
+										log.Print(err)
+									}
+									continue
+								}
+								w.Write(responseBytes)
+								return
+							} else {
+								fmt.Fprintf(w, "%s", mock.Response)
+								return
+							}
+						}
 					}
+
 				}
 			}
 		}
