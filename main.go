@@ -12,15 +12,21 @@ import (
 
 func main() {
 
-	userHome, _ := os.UserHomeDir()
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 	defaultDefLoc := fmt.Sprintf("%s/.mock-http/definitions", userHome)
-	_ = os.MkdirAll(defaultDefLoc, os.ModePerm)
+	err = os.MkdirAll(defaultDefLoc, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	definitions := flag.String("definitions", defaultDefLoc, "Mock definitions location")
 	address := flag.String("address", "127.0.0.1:3000", "Address  Ex: 3000, 0.0.0.0:3000")
 	flag.Parse()
 
-	err := server.StartServer(server.Options{
+	err = server.StartServer(server.Options{
 		Address:             *address,
 		DefinitionsLocation: *definitions,
 	})

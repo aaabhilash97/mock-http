@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -35,14 +36,14 @@ type MockDefinition struct {
 }
 
 func StartServer(opt Options) error {
-	defFiles, err := ioutil.ReadDir(opt.DefinitionsLocation)
-	if err != nil {
-		if opt.Debug {
-			log.Print(err)
-		}
-		return err
-	}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		defFiles, err := ioutil.ReadDir(opt.DefinitionsLocation)
+		if err != nil {
+			if opt.Debug {
+				log.Print(err)
+			}
+		}
 		// Check for mockable
 		for _, defFile := range defFiles {
 			if !defFile.IsDir() {
@@ -62,66 +63,10 @@ func StartServer(opt Options) error {
 					continue
 				}
 				if matchRequestWithMock(mock, req) {
-					body := make(map[string]interface{})
-					// query := req.URL.Query()
-					// headers := req.Header
-					type reqValuesModel struct {
-						Body map[string]interface{}
-					}
-
-					bodyBytes, err := ioutil.ReadAll(req.Body)
-					if err != nil {
-						if opt.Debug {
-							log.Print(err)
-						}
+					if err := cc(mock, req, w); err != nil {
 						continue
-					}
-					err = json.Unmarshal(bodyBytes, &body)
-					if err != nil {
-						if opt.Debug {
-							log.Print(err)
-						}
-					}
-					reqValues := reqValuesModel{
-						Body: body,
-					}
-
-					if len(mock.ContentType) > 0 {
-						w.Header().Set("Content-Type", mock.ContentType)
-					}
-
-					for key, value := range mock.Response {
-						if key == "default" {
-							continue
-						}
-						t := template.Must(template.New("letter").Parse(key))
-						var keyVal bytes.Buffer
-						err = t.Execute(&keyVal, reqValues)
-						if err != nil {
-							if opt.Debug {
-								log.Print(err)
-							}
-							continue
-						}
-						if b, _ := strconv.ParseBool(keyVal.String()); b {
-							if _, ok := value.(map[string]interface{}); ok {
-								if len(mock.ContentType) == 0 {
-									w.Header().Set("Content-Type", applicationJson)
-								}
-								responseBytes, err := json.Marshal(value)
-								if err != nil {
-									if opt.Debug {
-										log.Print(err)
-									}
-									continue
-								}
-								w.Write(responseBytes)
-								return
-							} else {
-								fmt.Fprintf(w, "%s", mock.Response)
-								return
-							}
-						}
+					} else {
+						return
 					}
 
 				}
@@ -152,7 +97,7 @@ func StartServer(opt Options) error {
 		proxy.ServeHTTP(w, req)
 	})
 
-	err = http.ListenAndServe(opt.Address, nil)
+	err := http.ListenAndServe(opt.Address, nil)
 	if err != nil {
 		if opt.Debug {
 			log.Print(err)
@@ -166,4 +111,68 @@ func matchRequestWithMock(mock MockDefinition, req *http.Request) bool {
 		return true
 	}
 	return false
+}
+
+func cc(mock MockDefinition, req *http.Request, w http.ResponseWriter) error {
+	body := make(map[string]interface{})
+	// query := req.URL.Query()
+	// headers := req.Header
+	type reqValuesModel struct {
+		Body map[string]interface{}
+	}
+
+	bodyBytes, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(bodyBytes, &body)
+	if err != nil {
+		return err
+	}
+	reqValues := reqValuesModel{
+		Body: body,
+	}
+
+	if len(mock.ContentType) > 0 {
+		w.Header().Set("Content-Type", mock.ContentType)
+	}
+	for key, value := range mock.Response {
+		if key == "default" {
+			continue
+		}
+		t := template.Must(template.New("letter").Parse(key))
+		var keyVal bytes.Buffer
+		err := t.Execute(&keyVal, reqValues)
+		if err != nil {
+			return err
+		}
+		if b, _ := strconv.ParseBool(keyVal.String()); b {
+			if err := sendResponse(value, mock, w); err != nil {
+				continue
+			} else {
+				return nil
+			}
+		}
+	}
+	if value, ok := mock.Response["default"]; ok {
+		err := sendResponse(value, mock, w)
+		return err
+	}
+	return errors.New("No mock matching")
+}
+
+func sendResponse(value interface{}, mock MockDefinition, w http.ResponseWriter) error {
+	if _, ok := value.(map[string]interface{}); ok {
+		if len(mock.ContentType) == 0 {
+			w.Header().Set("Content-Type", applicationJson)
+		}
+		responseBytes, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+		w.Write(responseBytes)
+		return nil
+	}
+	fmt.Fprintf(w, "%s", mock.Response)
+	return nil
 }

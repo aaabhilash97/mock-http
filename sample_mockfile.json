@@ -1,0 +1,16 @@
+{
+    "url": "http://example.com:5000/api/path",
+    "method": "POST",
+    "response": {
+        "default": {
+            "ok": "ok"
+        },
+        "{{ and ( eq .Body.name \"Doe\" )  (true ) }}": {
+            "ok": "dsd"
+        },
+        "{{ and ( eq .Body.name \"jon\" )  (true ) }}": {
+            "ok": "dsdssss"
+        }
+    },
+    "content_type": "application/json"
+}
