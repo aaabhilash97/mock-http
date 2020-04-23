@@ -1,5 +1,8 @@
 # mock-http
 
+Mock http server response if matching with mock definitions.
+Reverse proxy to original location if no matching with mock definitions.
+
 ## Usage
 
 ```bash
