@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -110,12 +111,16 @@ func StartServer(opt Options) error {
 		}
 		proxy := httputil.NewSingleHostReverseProxy(remote)
 		req.Host = remote.Host
-		reqq, err := http.NewRequest(req.Method, fmt.Sprintf("%s://%s", req.URL.Scheme, req.URL.Host), bytes.NewReader(bodyBytes))
-		if err != nil {
-			fmt.Fprintf(w, "Failed to proxy request")
-			return
+		{
+
+			var proxyReqBody io.Reader = bytes.NewReader(bodyBytes)
+			var ok bool
+			req.Body, ok = proxyReqBody.(io.ReadCloser)
+			if !ok && body != nil {
+				req.Body = ioutil.NopCloser(proxyReqBody)
+			}
 		}
-		req.Body = reqq.Body
+
 		proxy.ServeHTTP(w, req)
 	})
 
