@@ -21,9 +21,9 @@ Usage of ./mock-http:
     "url": "http://example.com:5000/api/test",
     "method": "POST",
     "response": {
-        // "default": {
-        //     "ok": "ok"
-        // },
+        "default": {
+            "ok": "ok"
+        },
         "{{ and ( eq .Body.test \"test1\" )  (true ) }}": {
             "ok": "test1"
         },
