@@ -24,11 +24,13 @@ func main() {
 
 	definitions := flag.String("definitions", defaultDefLoc, "Mock definitions location")
 	address := flag.String("address", "127.0.0.1:3000", "Address  Ex: 3000, 0.0.0.0:3000")
+	debug := flag.Bool("debug", false, "Show debug info")
 	flag.Parse()
 
 	err = server.StartServer(server.Options{
 		Address:             *address,
 		DefinitionsLocation: *definitions,
+		Debug:               *debug,
 	})
 	if err != nil {
 		log.Fatal(err)

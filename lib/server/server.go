@@ -43,6 +43,21 @@ func StartServer(opt Options) error {
 				log.Print(err)
 			}
 		}
+		body := make(map[string]interface{})
+		// query := req.URL.Query()
+		// headers := req.Header
+		type reqValuesModel struct {
+			Body map[string]interface{}
+		}
+
+		bodyBytes, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			return
+		}
+		err = json.Unmarshal(bodyBytes, &body)
+		if err != nil {
+			return
+		}
 		// Check for mockable
 		for _, defFile := range defFiles {
 			if !defFile.IsDir() {
@@ -62,7 +77,8 @@ func StartServer(opt Options) error {
 					continue
 				}
 				if matchRequestWithMock(mock, req) {
-					if err := cc(mock, req, w); err != nil {
+
+					if err := cc(mock, body, w); err != nil {
 						continue
 					} else {
 						return
@@ -76,6 +92,9 @@ func StartServer(opt Options) error {
 			return
 		}
 
+		if opt.Debug {
+			log.Println(fmt.Sprintf("Calling %s://%s", req.URL.Scheme, req.URL.Host))
+		}
 		// Reproxying request to original host
 		remote, err := url.Parse(fmt.Sprintf("%s://%s", req.URL.Scheme, req.URL.Host))
 		if err != nil {
@@ -91,10 +110,18 @@ func StartServer(opt Options) error {
 		}
 		proxy := httputil.NewSingleHostReverseProxy(remote)
 		req.Host = remote.Host
+		reqq, err := http.NewRequest(req.Method, fmt.Sprintf("%s://%s", req.URL.Scheme, req.URL.Host), bytes.NewReader(bodyBytes))
+		if err != nil {
+			fmt.Fprintf(w, "Failed to proxy request")
+			return
+		}
+		req.Body = reqq.Body
 		proxy.ServeHTTP(w, req)
 	})
 
+	log.Println(fmt.Sprintf("Running in %s", opt.Address))
 	err := http.ListenAndServe(opt.Address, nil)
+	// err := http.ListenAndServeTLS(opt.Address, "./server.crt", "./server.key", nil)
 	if err != nil {
 		if opt.Debug {
 			log.Print(err)
@@ -110,21 +137,9 @@ func matchRequestWithMock(mock MockDefinition, req *http.Request) bool {
 	return false
 }
 
-func cc(mock MockDefinition, req *http.Request, w http.ResponseWriter) error {
-	body := make(map[string]interface{})
-	// query := req.URL.Query()
-	// headers := req.Header
+func cc(mock MockDefinition, body map[string]interface{}, w http.ResponseWriter) error {
 	type reqValuesModel struct {
 		Body map[string]interface{}
-	}
-
-	bodyBytes, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(bodyBytes, &body)
-	if err != nil {
-		return err
 	}
 	reqValues := reqValuesModel{
 		Body: body,
@@ -159,6 +174,7 @@ func cc(mock MockDefinition, req *http.Request, w http.ResponseWriter) error {
 }
 
 func sendResponse(value interface{}, mock MockDefinition, w http.ResponseWriter) error {
+	log.Println("Called sendResponse")
 	if _, ok := value.(map[string]interface{}); ok {
 		if len(mock.ContentType) == 0 {
 			w.Header().Set("Content-Type", applicationJson)
@@ -167,6 +183,7 @@ func sendResponse(value interface{}, mock MockDefinition, w http.ResponseWriter)
 		if err != nil {
 			return err
 		}
+
 		w.Write(responseBytes)
 		return nil
 	}
