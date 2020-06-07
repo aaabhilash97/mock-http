@@ -54,7 +54,7 @@ func main() {
 		Transport: netTransport,
 	}
 
-	req, err := http.NewRequest("POST", "http://example.com:5000/api/test", bytes.NewReader([]byte{}))
+	req, err := http.NewRequest("POST", "http://example.com:5000/api/test", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
