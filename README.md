@@ -35,7 +35,7 @@ Usage of ./mock-http:
 }
 ```
 
-## Mock go client as proxy example
+## Example Go client using mock-http as proxy
 
 ```go
 package main
