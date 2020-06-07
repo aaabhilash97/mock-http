@@ -47,7 +47,6 @@ import (
 )
 func main() {
 	var netTransport = &http.Transport{
-		TLSHandshakeTimeout: 5 * time.Second,
 		Proxy:               "http://127.0.0.1:3000",
 	}
 
