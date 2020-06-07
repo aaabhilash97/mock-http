@@ -16,7 +16,7 @@ Usage of ./mock-http:
 ## Mock definition example
 
 ```bash
-➜  mock-http git:(master) cat ~/.mock-http/definitions/fetch_kyc.mock
+➜  mock-http git:(master) cat ~/.mock-http/definitions/example1.mock
 {
     "url": "http://example.com:5000/api/test",
     "method": "POST",
