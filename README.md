@@ -34,3 +34,37 @@ Usage of ./mock-http:
     "content_type": "application/json"
 }
 ```
+
+## Mock go client as proxy example
+
+```go
+package main
+import (
+"bytes"
+	"io/ioutil"
+	"net/http"
+	"log"
+)
+func main() {
+	var netTransport = &http.Transport{
+		TLSHandshakeTimeout: 5 * time.Second,
+		Proxy:               "http://127.0.0.1:3000",
+	}
+
+	var netClient = &http.Client{
+		Transport: netTransport,
+	}
+
+	req, err := http.NewRequest("GET", "http://example.com:5000/api/test", bytes.NewReader([]byte{}))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resp, err := netClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(ioutil.ReadAll(resp.Body))
+}
+
+```
