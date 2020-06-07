@@ -40,7 +40,7 @@ Usage of ./mock-http:
 ```go
 package main
 import (
-"bytes"
+    "bytes"
 	"io/ioutil"
 	"net/http"
 	"log"
