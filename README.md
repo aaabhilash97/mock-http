@@ -9,6 +9,9 @@ Reverse proxy to original location if no matching with mock definitions.
 go get -u github.com/aaabhilash97/mock-http
 ```
 
+OR
+Download from https://github.com/aaabhilash97/mock-http/releases
+
 ## Usage
 
 ```bash
