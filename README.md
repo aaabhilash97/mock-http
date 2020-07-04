@@ -3,6 +3,15 @@
 Mock http server response if matching with mock definitions.
 Reverse proxy to original location if no matching with mock definitions.
 
+## How to install 
+```sh
+// install or upgrade
+go get -u github.com/aaabhilash97/mock-http
+```
+
+OR
+Download from https://github.com/aaabhilash97/mock-http/releases
+
 ## Usage
 
 ```bash
