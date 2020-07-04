@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-
 	"log"
+	"os"
 
 	"github.com/aaabhilash97/mock-http/lib/server"
 )
