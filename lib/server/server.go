@@ -45,8 +45,6 @@ func StartServer(opt Options) error {
 			}
 		}
 		body := make(map[string]interface{})
-		// query := req.URL.Query()
-		// headers := req.Header
 		type reqValuesModel struct {
 			Body map[string]interface{}
 		}
@@ -78,13 +76,11 @@ func StartServer(opt Options) error {
 					continue
 				}
 				if matchRequestWithMock(mock, req) {
-
 					if err := cc(mock, body, w); err != nil {
 						continue
 					} else {
 						return
 					}
-
 				}
 			}
 		}
