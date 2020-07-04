@@ -175,7 +175,6 @@ func cc(mock MockDefinition, body map[string]interface{}, w http.ResponseWriter)
 }
 
 func sendResponse(value interface{}, mock MockDefinition, w http.ResponseWriter) error {
-	log.Println("Called sendResponse")
 	if _, ok := value.(map[string]interface{}); ok {
 		if len(mock.ContentType) == 0 {
 			w.Header().Set("Content-Type", applicationJson)
