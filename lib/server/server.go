@@ -36,6 +36,12 @@ type MockDefinition struct {
 	Method      string                 `json:"method"`
 }
 
+type reqValuesModel struct {
+	Body   map[string]interface{}
+	Query  map[string]string
+	Header map[string]string
+}
+
 func StartServer(opt Options) error {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
@@ -46,9 +52,17 @@ func StartServer(opt Options) error {
 			}
 		}
 
-		body := make(map[string]interface{})
-		type reqValuesModel struct {
-			Body map[string]interface{}
+		query := make(map[string]string)
+		for key, value := range req.URL.Query() {
+			if len(value) > 0 {
+				query[key] = value[0]
+			}
+		}
+		header := make(map[string]string)
+		for key, value := range req.Header {
+			if len(value) > 0 {
+				header[key] = value[0]
+			}
 		}
 
 		bodyBytes, err := ioutil.ReadAll(req.Body)
@@ -56,12 +70,20 @@ func StartServer(opt Options) error {
 			log.Println(err)
 			return
 		}
+		body := make(map[string]interface{})
 		if len(bodyBytes) > 0 {
 			err = json.Unmarshal(bodyBytes, &body)
 			if err != nil {
 				log.Println(err)
 			}
 		}
+
+		reqValue := reqValuesModel{
+			Body:   body,
+			Query:  query,
+			Header: header,
+		}
+
 		// Check for mockable
 		for _, defFile := range defFiles {
 			if !defFile.IsDir() {
@@ -77,7 +99,7 @@ func StartServer(opt Options) error {
 					continue
 				}
 				if matchRequestWithMock(mock, req) {
-					if err := cc(mock, body, w); err != nil {
+					if err := cc(mock, reqValue, w); err != nil {
 						continue
 					} else {
 						return
@@ -139,14 +161,7 @@ func matchRequestWithMock(mock MockDefinition, req *http.Request) bool {
 	return false
 }
 
-func cc(mock MockDefinition, body map[string]interface{}, w http.ResponseWriter) error {
-	type reqValuesModel struct {
-		Body map[string]interface{}
-	}
-	reqValues := reqValuesModel{
-		Body: body,
-	}
-
+func cc(mock MockDefinition, reqValues reqValuesModel, w http.ResponseWriter) error {
 	if len(mock.ContentType) > 0 {
 		w.Header().Set("Content-Type", mock.ContentType)
 	}
