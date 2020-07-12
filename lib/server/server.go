@@ -41,9 +41,10 @@ type MockDefinition struct {
 }
 
 type reqValuesModel struct {
-	Body   map[string]interface{}
-	Query  map[string]string
-	Header map[string]string
+	RawBody interface{}
+	Body    map[string]interface{}
+	Query   map[string]string
+	Header  map[string]string
 }
 
 func StartServer(opt Options) error {
@@ -75,19 +76,21 @@ func StartServer(opt Options) error {
 			return
 		}
 		body := make(map[string]interface{})
+		var rawBody interface{}
 		if len(bodyBytes) > 0 {
 			err = json.Unmarshal(bodyBytes, &body)
 			if err != nil {
+				rawBody = fmt.Sprintf("%s", bodyBytes)
 				log.Println(err)
 			}
 		}
 
 		reqValue := reqValuesModel{
-			Body:   body,
-			Query:  query,
-			Header: header,
+			RawBody: rawBody,
+			Body:    body,
+			Query:   query,
+			Header:  header,
 		}
-
 		// Check for mockable
 		for _, defFile := range defFiles {
 			if !defFile.IsDir() {

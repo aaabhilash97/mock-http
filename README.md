@@ -34,7 +34,7 @@ Usage of ./mock-http:
         "default": {
             "data": {
                 "body": {
-                    "status-code": "11102",
+                    "status-code": "102",
                     "result": {
                         "name": "ABHILASH KM"
                     }
@@ -44,10 +44,10 @@ Usage of ./mock-http:
                 "Code": "0000"
             }
         },
-        "{{if .Body.param}}{{ and (eq .Body.param \"ssssss\") (true) }}{{end}}": {
+        "{{ and (eq .RawBody \"qqqq\") (true) }}": {
             "data": {
                 "body": {
-                    "status-code": "11102",
+                    "status-code": "100",
                     "result": {
                         "name": "ABHILASH KM"
                     }
@@ -57,10 +57,23 @@ Usage of ./mock-http:
                 "Code": "0000"
             }
         },
-        "{{if .Query.param}}{{ and (eq .Query.param \"test1\") (true) }}{{end}}": {
+        "{{if .Body.param}}{{ and (eq .Body.param \"qqqq\") (true) }}{{end}}": {
             "data": {
                 "body": {
-                    "status-code": "11102",
+                    "status-code": "102",
+                    "result": {
+                        "name": "ABHILASH KM"
+                    }
+                }
+            },
+            "header": {
+                "Code": "0000"
+            }
+        },
+        "{{if .Query.param}}{{ and (eq .Query.param \"csrpm7372k\") (true) }}{{end}}": {
+            "data": {
+                "body": {
+                    "status-code": "102",
                     "result": {
                         "name": "ABHILASH KM"
                     }
