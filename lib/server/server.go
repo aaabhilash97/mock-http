@@ -76,11 +76,10 @@ func StartServer(opt Options) error {
 			return
 		}
 		body := make(map[string]interface{})
-		var rawBody interface{}
+		rawBody := fmt.Sprintf("%s", bodyBytes)
 		if len(bodyBytes) > 0 {
 			err = json.Unmarshal(bodyBytes, &body)
 			if err != nil {
-				rawBody = fmt.Sprintf("%s", bodyBytes)
 				log.Println(err)
 			}
 		}
