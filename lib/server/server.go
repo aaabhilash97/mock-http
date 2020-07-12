@@ -29,11 +29,15 @@ type Options struct {
 	Debug               bool
 }
 
+type responseModel struct {
+	Data   interface{}       `json:"data"`
+	Header map[string]string `json:"header"`
+}
 type MockDefinition struct {
-	Url         string                 `json:"url"`
-	Response    map[string]interface{} `json:"response"`
-	ContentType string                 `json:"content_type"`
-	Method      string                 `json:"method"`
+	Url         string                   `json:"url"`
+	Response    map[string]responseModel `json:"response"`
+	ContentType string                   `json:"content_type"`
+	Method      string                   `json:"method"`
 }
 
 type reqValuesModel struct {
@@ -192,12 +196,16 @@ func cc(mock MockDefinition, reqValues reqValuesModel, w http.ResponseWriter) er
 	return errors.New("No mock matching")
 }
 
-func sendResponse(value interface{}, mock MockDefinition, w http.ResponseWriter) error {
-	if _, ok := value.(map[string]interface{}); ok {
+func sendResponse(value responseModel, mock MockDefinition, w http.ResponseWriter) error {
+	for key, value := range value.Header {
+		w.Header().Set(key, value)
+	}
+
+	if _, ok := value.Data.(map[string]interface{}); ok {
 		if len(mock.ContentType) == 0 {
 			w.Header().Set("Content-Type", applicationJson)
 		}
-		responseBytes, err := json.Marshal(value)
+		responseBytes, err := json.Marshal(value.Data)
 		if err != nil {
 			log.Println(err)
 			return err
