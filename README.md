@@ -70,7 +70,7 @@ Usage of ./mock-http:
                 "Code": "0000"
             }
         },
-        "{{if .Query.param}}{{ and (eq .Query.param \"csrpm7372k\") (true) }}{{end}}": {
+        "{{if .Query.param}}{{ and (eq .Query.param \"cs44om478k\") (true) }}{{end}}": {
             "data": {
                 "body": {
                     "status-code": "102",
