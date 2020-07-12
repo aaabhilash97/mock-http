@@ -97,14 +97,15 @@ import (
 )
 func main() {
 	var netTransport = &http.Transport{
-		Proxy:               "http://127.0.0.1:3000",
+		Proxy:               "http://127.0.0.1:3000", // Mock http proxy running on this address
 	}
 
 	var netClient = &http.Client{
 		Transport: netTransport,
 	}
 
-	req, err := http.NewRequest("POST", "http://example.com:5000/api/test", nil)
+	req, err := http.NewRequest("POST", "http://example.com:5000/api/test", // mock definition should have this url
+	 nil)
 	if err != nil {
 		log.Fatal(err)
 	}
