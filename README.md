@@ -3,7 +3,8 @@
 Mock http server response if matching with mock definitions.
 Reverse proxy to original location if no matching with mock definitions.
 
-## How to install 
+## How to install
+
 ```sh
 // install or upgrade
 go get -u github.com/aaabhilash97/mock-http
@@ -31,13 +32,28 @@ Usage of ./mock-http:
     "method": "POST",
     "response": {
         "default": {
-            "ok": "ok"
+            "body": {
+                "status-code": "10122222",
+                "result": {
+                    "name": "JOHN"
+                }
+            }
         },
-        "{{ and ( eq .Body.test \"test1\" )  (true ) }}": {
-            "ok": "test1"
+        "{{if .Body.param}}{{ and (eq .Body.param \"PPPPPPPP\") (true) }}{{end}}": {
+            "body": {
+                "status-code": "101222",
+                "result": {
+                    "name": "JOE"
+                }
+            }
         },
-        "{{ and ( eq .Body.test \"test2\" )  (true ) }}": {
-            "ok": "test2"
+        "{{if .Query.param}}{{ and (eq .Query.param \"cJKLm7372k\") (true) }}{{end}}": {
+            "body": {
+                "status-code": "2222102",
+                "result": {
+                    "name": "ABHILASH KM"
+                }
+            }
         }
     },
     "content_type": "application/json"
