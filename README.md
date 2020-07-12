@@ -32,26 +32,38 @@ Usage of ./mock-http:
     "method": "POST",
     "response": {
         "default": {
-            "body": {
-                "status-code": "10122222",
-                "result": {
-                    "name": "JOHN"
+            "data": {
+                "body": {
+                    "status-code": "11102",
+                    "result": {
+                        "name": "ABHILASH KM"
+                    }
                 }
+            },
+            "header": {
+                "Code": "0000"
             }
         },
-        "{{if .Body.param}}{{ and (eq .Body.param \"PPPPPPPP\") (true) }}{{end}}": {
-            "body": {
-                "status-code": "101222",
-                "result": {
-                    "name": "JOE"
+        "{{if .Body.param}}{{ and (eq .Body.param \"ssssss\") (true) }}{{end}}": {
+            "data": {
+                "body": {
+                    "status-code": "11102",
+                    "result": {
+                        "name": "ABHILASH KM"
+                    }
                 }
+            },
+            "header": {
+                "Code": "0000"
             }
         },
-        "{{if .Query.param}}{{ and (eq .Query.param \"cJKLm7372k\") (true) }}{{end}}": {
-            "body": {
-                "status-code": "2222102",
-                "result": {
-                    "name": "ABHILASH KM"
+        "{{if .Query.param}}{{ and (eq .Query.param \"test1\") (true) }}{{end}}": {
+            "data": {
+                "body": {
+                    "status-code": "11102",
+                    "result": {
+                        "name": "ABHILASH KM"
+                    }
                 }
             }
         }
