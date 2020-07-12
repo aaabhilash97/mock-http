@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -44,6 +45,7 @@ func StartServer(opt Options) error {
 				log.Print(err)
 			}
 		}
+
 		body := make(map[string]interface{})
 		type reqValuesModel struct {
 			Body map[string]interface{}
@@ -51,28 +53,27 @@ func StartServer(opt Options) error {
 
 		bodyBytes, err := ioutil.ReadAll(req.Body)
 		if err != nil {
+			log.Println(err)
 			return
 		}
-		err = json.Unmarshal(bodyBytes, &body)
-		if err != nil {
-			return
+		if len(bodyBytes) > 0 {
+			err = json.Unmarshal(bodyBytes, &body)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 		// Check for mockable
 		for _, defFile := range defFiles {
 			if !defFile.IsDir() {
 				file, err := ioutil.ReadFile(path.Join(opt.DefinitionsLocation, defFile.Name()))
 				if err != nil {
-					if opt.Debug {
-						log.Print(err)
-					}
+					log.Print(err)
 					continue
 				}
 				mock := MockDefinition{}
 				err = json.Unmarshal(file, &mock)
 				if err != nil {
-					if opt.Debug {
-						log.Print(err)
-					}
+					log.Print("JSON:", err)
 					continue
 				}
 				if matchRequestWithMock(mock, req) {
@@ -149,6 +150,7 @@ func cc(mock MockDefinition, body map[string]interface{}, w http.ResponseWriter)
 	if len(mock.ContentType) > 0 {
 		w.Header().Set("Content-Type", mock.ContentType)
 	}
+
 	for key, value := range mock.Response {
 		if key == "default" {
 			continue
@@ -157,9 +159,10 @@ func cc(mock MockDefinition, body map[string]interface{}, w http.ResponseWriter)
 		var keyVal bytes.Buffer
 		err := t.Execute(&keyVal, reqValues)
 		if err != nil {
+			log.Println(err)
 			return err
 		}
-		if b, _ := strconv.ParseBool(keyVal.String()); b {
+		if b, _ := strconv.ParseBool(strings.TrimSpace(keyVal.String())); b {
 			if err := sendResponse(value, mock, w); err != nil {
 				continue
 			} else {
@@ -181,6 +184,7 @@ func sendResponse(value interface{}, mock MockDefinition, w http.ResponseWriter)
 		}
 		responseBytes, err := json.Marshal(value)
 		if err != nil {
+			log.Println(err)
 			return err
 		}
 
